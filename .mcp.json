@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "blender": {
+      "command": "uvx",
+      "args": ["blender-mcp"],
+      "note": "需在 Blender 内安装 ahujasid/blender-mcp 插件（addon.py）并启用后使用（设计文档 §5.1）"
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "."]
+    },
+    "memory": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-memory"]
+    },
+    "vision": {
+      "command": "python",
+      "args": ["-m", "tools.vision_mcp.server"],
+      "note": "自研 vision-mcp：Depth Anything V2 / SAM2 / 姿态估计的本地推理封装（§5.2），需 pip install mcp"
+    }
+  }
+}

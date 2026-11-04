@@ -1,0 +1,81 @@
+# ============================================================
+# 白模实时建模工作流 全局配置
+# 依据：《白模实时建模工作流设计文档》§4 / §7 / §8
+# 相对路径均基于项目根目录
+# ============================================================
+
+paths:
+  raw: data/raw            # 源游戏视频
+  clips: data/clips        # 15-30s 切片
+  frames: data/frames      # 抽帧（兼容保留，实际帧存于 analysis）
+  analysis: data/analysis  # 每片段中间产物（帧/JSON/深度/位姿/渲染）
+  output: data/output      # 成对交付目录
+  templates: assets/templates
+
+# ---- Stage 1 采集与切片 ----
+clip:
+  min_duration_s: 15.0
+  max_duration_s: 30.0
+  scene_detect_threshold: 27.0   # PySceneDetect ContentDetector
+
+# ---- Stage 2 预处理 ----
+preprocess:
+  jpeg_quality: 92
+  keyframe_base_fps: 0.5         # 每 2s 一帧（设计文档 §3.3）
+  keyframe_min_interval_s: 1.0   # 运动加密的下限间隔
+  keyframe_max_interval_s: 4.0   # 最大间隔兜底
+  purity_frame_samples: 8        # 纯净度预检抽样帧数
+
+# ---- Stage 3 语义解析（多模型可选，§7.1 路由）----
+semantic:
+  provider: dashscope            # anthropic | dashscope(Qwen-VL 推荐) | zhipu | doubao | moonshot | openai_compatible
+  model: qwen-vl-max             # 主解析（复杂场景空间推理）
+  fallback_model: qwen-vl-plus   # 降级路由（例行帧）
+  base_url: ""                   # 留空用 provider 预置；openai_compatible 时必填
+  api_key_env: ""                # 留空用 provider 预置（dashscope→DASHSCOPE_API_KEY）
+  max_tokens: 8000
+  use_streaming: false
+  retries: 3                     # 429/5xx 退避重试
+  match_iou: 0.30                # 资产库跨帧匹配 IoU 阈值
+  size_drift_threshold: 0.30     # 尺寸漂移 >30% 触发重解析（§4.3）
+
+# ---- 本地视觉模型（可选，未安装时优雅跳过）----
+depth:
+  enabled: true
+  model_id: depth-anything/Depth-Anything-V2-Small-hf
+  device: auto                   # auto | cuda | cpu
+
+segment:
+  enabled: true
+  model_config: configs/sam2.1/sam2.1_hiera_t.yaml
+  checkpoint: checkpoints/sam2_hiera_t.pt
+
+pose:
+  enabled: true
+  backend: auto                  # auto | ultralytics | rtmpose | off
+  yolo_pose_model: yolo11n-pose.pt
+  person_height_m: 1.75          # 姿态提升默认身高锚点
+
+# ---- Stage 4 相机与几何解算 ----
+camera:
+  backend: auto                  # auto | mast3r | glomap | none
+  mast3r_cmd: ""                 # 例: "python external/mast3r/demo.py --imgs {frames_dir} --out {out_dir}"
+  glomap_cmd: ""                 # 例: "glomap mapper --image_path {frames_dir} --output_path {out_dir}"
+  keyframe_subsample: 24         # 送 SfM 的最大帧数
+  scale_person_height_range: [1.5, 2.1]
+  default_person_height_m: 1.75
+
+# ---- Stage 5 Blender 白模生成 ----
+blender:
+  executable: blender            # PATH 中的 blender，或绝对路径
+  eevee_samples: 64
+  background: green              # green | white（需求允许两者）
+  green_rgb: [0.0, 0.55, 0.12]
+  white_rgb: [0.9, 0.9, 0.9]
+  ground_extent_m: 30.0
+
+# ---- Stage 7 质检 ----
+qa:
+  motion_sample_frames: 120      # 运动同步曲线采样数
+  motion_corr_min: 0.60          # 光流/差分能量相关系数下限
+  delivery_sample_rate: 0.30     # 30% 人工抽检比例（§4.7）

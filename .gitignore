@@ -1,0 +1,14 @@
+__pycache__/
+*.pyc
+.venv/
+*.blend1
+
+# 大体积中间产物与模型
+data/frames/
+data/analysis/
+data/output/
+data/clips/
+data/raw/
+checkpoints/
+external/
+!**/.gitkeep

@@ -1,0 +1,18 @@
+# 核心流水线
+anthropic>=0.42.0               # Claude 路径（可选，用国内模型可不装）
+openai>=1.40.0                  # 国内 OpenAI 兼容接口（dashscope/zhipu/doubao/moonshot）
+numpy>=1.26.0
+opencv-python>=4.9.0
+PyYAML>=6.0.1
+jsonschema>=4.21.0
+scenedetect>=0.6.4
+
+# 自研 vision-mcp server（§5.2）
+mcp>=1.2.0
+
+# ---- 可选：本地视觉模型（GPU 显存 >=8GB 建议，§12.2）----
+# torch>=2.2.0
+# transformers>=4.44.0          # Depth Anything V2
+# sam2 @ git+https://github.com/facebookresearch/sam2.git   # SAM2
+# ultralytics>=8.3.0            # YOLO11-pose（姿态备选后端）
+# paddleocr>=2.8.0              # 纯净度 OCR 检测（可选）
